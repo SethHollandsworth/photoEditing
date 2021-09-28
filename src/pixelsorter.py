@@ -1,5 +1,6 @@
 import PIL
 import argparse
+from time import time
 from PIL import Image, ImageFilter
 from functools import partial
 from itertools import repeat
@@ -12,7 +13,7 @@ imagePath = '../assets/' + filename + extension
 savePath = '../assets/edits/' + filename + '6' + extension
 
 # define thresholds for light and dark
-darkThreshold = 10
+darkThreshold = 44
 lightThreshold = 235
 # true if sorting should be vertical
 vertical = False
@@ -49,15 +50,20 @@ def sortHelper(array):
 
 
 def lightness(pixel):
-    return sum(pixel)/3
+    return np.mean(pixel)
 
 
 def getFirstNotBlackX(array):
-    return np.argmax(array > darkThreshold)
+    # get the brightness of all pixels in row
+    row = np.fromiter(map(lightness, array), dtype=np.int)
+    # print(row)
+    # find the first one that is above the the threshold
+    return np.argmax(row > darkThreshold)
 
 
 def getNextBlackX(array, startIdx):
-    out = np.argmax(array[startIdx:] < darkThreshold) + startIdx
+    row = np.fromiter(map(lightness, array[startIdx:]), dtype=np.int)
+    out = np.argmax(row < darkThreshold) + startIdx
     if out == startIdx:
         return len(array) - 1
     return out - 1
@@ -80,22 +86,7 @@ def getNextWhiteX(array):
             return len(array)-1
     return -1
 
-# def sortPhoto(imageArray):
-#     # rows = [i for i in range(len(imageArray))]
-#     for i in range(len(imageArray)):
-#         startIdx = getFirstNotBlackX(imageArray[i])
-#         endIdx = getNextBlackX(imageArray[i])
-#         imageArray[i][startIdx:endIdx] = sorted(
-#             imageArray[i][startIdx:endIdx], key=sortHelper)
-#     return imageArray
 
-
-# def sortPhoto(imageArray):
-#     rows = range(len(imageArray))
-#     with Pool(8) as p:
-#         p.map(
-#             partial(workerFunction, imageArray=imageArray), rows)
-#     return imageArray
 def sortPhoto(imageArray):
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
         executor.map(workerFunction, imageArray)
@@ -105,6 +96,7 @@ def sortPhoto(imageArray):
 def workerFunction(row):
     startIdx = getFirstNotBlackX(row)
     endIdx = getNextBlackX(row, startIdx)
+    print(startIdx, endIdx)
     row[startIdx:endIdx] = sorted(
         row[startIdx:endIdx], key=sortHelper)
 
@@ -132,7 +124,9 @@ if __name__ == '__main__':
     if vertical:
         image = image.rotate(90, expand=True)
     imageArray = convertImageToArray(image)
+    start = time()
     imageArray = sortPhoto(imageArray)
+    print(time() - start)
     image = convertArrayToImage(imageArray)
     # and stick the landing
     if vertical:
