@@ -7,10 +7,10 @@ from itertools import repeat
 import numpy as np
 import concurrent.futures
 
-filename = 'test10'
-extension = '.jpg'
-imagePath = '../assets/' + filename + extension
-savePath = '../assets/edits/' + filename + '6' + extension
+filename = "test10"
+extension = ".jpg"
+imagePath = "../assets/" + filename + extension
+savePath = "../assets/edits/" + filename + "6" + extension
 
 # define thresholds for light and dark
 darkThreshold = 44
@@ -83,7 +83,7 @@ def getNextWhiteX(array):
     while lightness(array[position]) < lightThreshold:
         position += 1
         if position >= len(array):
-            return len(array)-1
+            return len(array) - 1
     return -1
 
 
@@ -97,13 +97,12 @@ def workerFunction(row):
     startIdx = getFirstNotBlackX(row)
     endIdx = getNextBlackX(row, startIdx)
     print(startIdx, endIdx)
-    row[startIdx:endIdx] = sorted(
-        row[startIdx:endIdx], key=sortHelper)
+    row[startIdx:endIdx] = sorted(row[startIdx:endIdx], key=sortHelper)
 
 
 def getEdges(image):
     # edge detection required greyscale image
-    grey = image.convert('L')
+    grey = image.convert("L")
     # get the edges
     edges = image.filter(ImageFilter.FIND_EDGES)
     return edges
@@ -117,7 +116,7 @@ def getEdges(image):
 #     # parser.add_argument('-m', action='store', dest='mode',
 #     #                     help='the mode of the pixel sorting:\n0 - default, sort after black pixels\n1 - sort after white pixels')
 #     main()
-if __name__ == '__main__':
+if __name__ == "__main__":
     image = readImage(imagePath)
     count = 0
     # a little turny turn
